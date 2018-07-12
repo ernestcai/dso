@@ -30,6 +30,9 @@
 #include <map>
 #include <deque>
 
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/io/pcd_io.h>
 
 namespace dso
 {

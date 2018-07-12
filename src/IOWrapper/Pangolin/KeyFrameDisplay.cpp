@@ -171,6 +171,75 @@ KeyFrameDisplay::~KeyFrameDisplay()
 		delete[] originalInputSparse;
 }
 
+pcl::PointCloud<pcl::PointXYZ> KeyFrameDisplay::getPC() {
+
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+
+    for(int i=0;i<numSparsePoints;i++)
+    {
+        if(originalInputSparse[i].idpeth < 0) continue;
+
+
+        float depth = 1.0f / originalInputSparse[i].idpeth;
+        float depth4 = depth*depth; depth4*= depth4;
+        float var = (1.0f / (originalInputSparse[i].idepth_hessian+0.01));
+
+        if(var * depth4 > my_scaledTH)
+            continue;
+
+        if(var > my_absTH)
+            continue;
+
+        if(originalInputSparse[i].relObsBaseline < my_minRelBS)
+            continue;
+
+
+        //for(int pnt=0;pnt<patternNum;pnt++)
+        // only need one point here
+        for(int pnt=0;pnt<1;pnt++)
+        {
+            if(my_sparsifyFactor > 1 && rand()%my_sparsifyFactor != 0) continue;
+            int dx = patternP[pnt][0];
+            int dy = patternP[pnt][1];
+
+            float pos_x = ((originalInputSparse[i].u+dx)*fxi + cxi) * depth;
+            float pos_y = ((originalInputSparse[i].v+dy)*fyi + cyi) * depth;
+            float pos_z = depth*(1 + 2*fxi * (rand()/(float)RAND_MAX-0.5f));
+            pcl::PointXYZ point(pos_x,pos_y,pos_z);
+            cloud.push_back(point);
+
+
+// deal with color
+//            tmpColorBuffer[vertexBufferNumPoints][0] = originalInputSparse[i].color[pnt];
+//            tmpColorBuffer[vertexBufferNumPoints][1] = originalInputSparse[i].color[pnt];
+//            tmpColorBuffer[vertexBufferNumPoints][2] = originalInputSparse[i].color[pnt];
+        }
+    }
+
+//    std::cout << "Cam Matrix" << std::endl;
+    auto cam_r = camToWorld.rotationMatrix();
+    auto cam_t = camToWorld.translation();
+    Eigen::Matrix4f cam(4,4);
+//    std::cout << "Checkpoint 1" << std::endl;
+    for (int i = 0; i < 3; i++){
+        for (int j = 0; j < 3; j++){
+            cam(i,j) = cam_r(i,j);
+        }
+    }
+//    std::cout << "Checkpoint 2" << std::endl;
+    for (int i = 0; i < 3; i ++){
+        cam(i,3) = cam_t(i);
+    }
+//    std::cout << "Checkpoint 3" << std::endl;
+    cam(3,3) = 1;
+
+//    std::cout << cam << std::endl;
+    pcl::PointCloud<pcl::PointXYZ> cloud_transformed;
+    pcl::transformPointCloud(cloud,cloud_transformed,cam);
+
+    return cloud_transformed;
+}
+
 bool KeyFrameDisplay::refreshPC(bool canRefresh, float scaledTH, float absTH, int mode, float minBS, int sparsity)
 {
 	if(canRefresh)

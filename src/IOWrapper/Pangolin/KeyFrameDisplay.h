@@ -32,6 +32,11 @@
 #include <sstream>
 #include <fstream>
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/common/transforms.h>
+
 namespace dso
 {
 class CalibHessian;
@@ -83,6 +88,8 @@ public:
 	// renders cam & pointcloud.
 	void drawCam(float lineWidth = 1, float* color = 0, float sizeFactor=1);
 	void drawPC(float pointSize);
+
+    pcl::PointCloud<pcl::PointXYZ> getPC();
 
 	int id;
 	bool active;
