@@ -216,24 +216,19 @@ pcl::PointCloud<pcl::PointXYZ> KeyFrameDisplay::getPC() {
         }
     }
 
-//    std::cout << "Cam Matrix" << std::endl;
     auto cam_r = camToWorld.rotationMatrix();
     auto cam_t = camToWorld.translation();
     Eigen::Matrix4f cam(4,4);
-//    std::cout << "Checkpoint 1" << std::endl;
     for (int i = 0; i < 3; i++){
         for (int j = 0; j < 3; j++){
             cam(i,j) = cam_r(i,j);
         }
     }
-//    std::cout << "Checkpoint 2" << std::endl;
     for (int i = 0; i < 3; i ++){
         cam(i,3) = cam_t(i);
     }
-//    std::cout << "Checkpoint 3" << std::endl;
     cam(3,3) = 1;
 
-//    std::cout << cam << std::endl;
     pcl::PointCloud<pcl::PointXYZ> cloud_transformed;
     pcl::transformPointCloud(cloud,cloud_transformed,cam);
 
