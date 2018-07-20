@@ -49,6 +49,7 @@
 
 #include "IOWrapper/Pangolin/PangolinDSOViewer.h"
 #include "IOWrapper/OutputWrapper/SampleOutputWrapper.h"
+#include "IOWrapper/io/JdeRobotOutputIO.h"
 
 
 std::string vignette = "";
@@ -397,7 +398,8 @@ int main( int argc, char** argv )
 
 
 
-
+	// for recording
+	fullSystem->outputWrapper.push_back(new IOWrap::JdeRobotOutputIO());
 
 
     IOWrap::PangolinDSOViewer* viewer = 0;
@@ -568,6 +570,7 @@ int main( int argc, char** argv )
         viewer->run();
 
     runthread.join();
+    std::cerr << "----------------------Join Completed-----------------" << std::endl;
 
 	for(IOWrap::Output3DWrapper* ow : fullSystem->outputWrapper)
 	{

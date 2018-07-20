@@ -319,6 +319,11 @@ void FullSystem::printResult(std::string file)
         myfile << output;
     }
 
+    // save all the pointclouds
+    for (auto kf : allKeyFramesHistory){
+
+    }
+
 	myfile.close();
 }
 
