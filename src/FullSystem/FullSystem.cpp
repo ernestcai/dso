@@ -306,7 +306,6 @@ void FullSystem::printResult(std::string file)
 
         output = "";
         output += "  - id: " + std::to_string(kf->id) + "\n";
-        // TODO: dealwith filename later
         output += "    filename: \"" + kf->filename + "\"\n";
         output += "    pose:\n";
         output += "      - " + std::to_string(q.w()) + "\n";
@@ -874,6 +873,7 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
     shell->marginalizedAt = shell->id = allFrameHistory.size();
     shell->timestamp = image->timestamp;
     shell->incoming_id = id;
+	shell->filename = image->filename;
 	fh->shell = shell;
 	allFrameHistory.push_back(shell);
 
