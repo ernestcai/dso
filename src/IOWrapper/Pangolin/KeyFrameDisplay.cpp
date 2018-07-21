@@ -87,10 +87,14 @@ void KeyFrameDisplay::setFromKF(FrameHessian* fh, CalibHessian* HCalib)
 	setFromF(fh->shell, HCalib);
 
 	// add all traces, inlier and outlier points.
-	int npoints = 	fh->immaturePoints.size() +
-					fh->pointHessians.size() +
-					fh->pointHessiansMarginalized.size() +
-					fh->pointHessiansOut.size();
+//	int npoints = 	fh->immaturePoints.size() +
+//					fh->pointHessians.size() +
+//					fh->pointHessiansMarginalized.size() +
+//					fh->pointHessiansOut.size();
+//	int npoints = fh->pointHessians.size() +
+//					 fh->pointHessiansMarginalized.size() +
+//					 fh->pointHessiansOut.size();
+    int npoints = fh->pointHessiansMarginalized.size();
 
 	if(numSparseBufferSize < npoints)
 	{
@@ -101,35 +105,35 @@ void KeyFrameDisplay::setFromKF(FrameHessian* fh, CalibHessian* HCalib)
 
     InputPointSparse<MAX_RES_PER_POINT>* pc = originalInputSparse;
 	numSparsePoints=0;
-	for(ImmaturePoint* p : fh->immaturePoints)
-	{
-		for(int i=0;i<patternNum;i++)
-			pc[numSparsePoints].color[i] = p->color[i];
+//	for(ImmaturePoint* p : fh->immaturePoints)
+//	{
+//		for(int i=0;i<patternNum;i++)
+//			pc[numSparsePoints].color[i] = p->color[i];
+//
+//		pc[numSparsePoints].u = p->u;
+//		pc[numSparsePoints].v = p->v;
+//		pc[numSparsePoints].idpeth = (p->idepth_max+p->idepth_min)*0.5f;
+//		pc[numSparsePoints].idepth_hessian = 1000;
+//		pc[numSparsePoints].relObsBaseline = 0;
+//		pc[numSparsePoints].numGoodRes = 1;
+//		pc[numSparsePoints].status = 0;
+//		numSparsePoints++;
+//	}
 
-		pc[numSparsePoints].u = p->u;
-		pc[numSparsePoints].v = p->v;
-		pc[numSparsePoints].idpeth = (p->idepth_max+p->idepth_min)*0.5f;
-		pc[numSparsePoints].idepth_hessian = 1000;
-		pc[numSparsePoints].relObsBaseline = 0;
-		pc[numSparsePoints].numGoodRes = 1;
-		pc[numSparsePoints].status = 0;
-		numSparsePoints++;
-	}
-
-	for(PointHessian* p : fh->pointHessians)
-	{
-		for(int i=0;i<patternNum;i++)
-			pc[numSparsePoints].color[i] = p->color[i];
-		pc[numSparsePoints].u = p->u;
-		pc[numSparsePoints].v = p->v;
-		pc[numSparsePoints].idpeth = p->idepth_scaled;
-		pc[numSparsePoints].relObsBaseline = p->maxRelBaseline;
-		pc[numSparsePoints].idepth_hessian = p->idepth_hessian;
-		pc[numSparsePoints].numGoodRes =  0;
-		pc[numSparsePoints].status=1;
-
-		numSparsePoints++;
-	}
+//	for(PointHessian* p : fh->pointHessians)
+//	{
+//		for(int i=0;i<patternNum;i++)
+//			pc[numSparsePoints].color[i] = p->color[i];
+//		pc[numSparsePoints].u = p->u;
+//		pc[numSparsePoints].v = p->v;
+//		pc[numSparsePoints].idpeth = p->idepth_scaled;
+//		pc[numSparsePoints].relObsBaseline = p->maxRelBaseline;
+//		pc[numSparsePoints].idepth_hessian = p->idepth_hessian;
+//		pc[numSparsePoints].numGoodRes =  0;
+//		pc[numSparsePoints].status=1;
+//
+//		numSparsePoints++;
+//	}
 
 	for(PointHessian* p : fh->pointHessiansMarginalized)
 	{
@@ -145,19 +149,19 @@ void KeyFrameDisplay::setFromKF(FrameHessian* fh, CalibHessian* HCalib)
 		numSparsePoints++;
 	}
 
-	for(PointHessian* p : fh->pointHessiansOut)
-	{
-		for(int i=0;i<patternNum;i++)
-			pc[numSparsePoints].color[i] = p->color[i];
-		pc[numSparsePoints].u = p->u;
-		pc[numSparsePoints].v = p->v;
-		pc[numSparsePoints].idpeth = p->idepth_scaled;
-		pc[numSparsePoints].relObsBaseline = p->maxRelBaseline;
-		pc[numSparsePoints].idepth_hessian = p->idepth_hessian;
-		pc[numSparsePoints].numGoodRes =  0;
-		pc[numSparsePoints].status=3;
-		numSparsePoints++;
-	}
+//	for(PointHessian* p : fh->pointHessiansOut)
+//	{
+//		for(int i=0;i<patternNum;i++)
+//			pc[numSparsePoints].color[i] = p->color[i];
+//		pc[numSparsePoints].u = p->u;
+//		pc[numSparsePoints].v = p->v;
+//		pc[numSparsePoints].idpeth = p->idepth_scaled;
+//		pc[numSparsePoints].relObsBaseline = p->maxRelBaseline;
+//		pc[numSparsePoints].idepth_hessian = p->idepth_hessian;
+//		pc[numSparsePoints].numGoodRes =  0;
+//		pc[numSparsePoints].status=3;
+//		numSparsePoints++;
+//	}
 	assert(numSparsePoints <= npoints);
 
 	camToWorld = fh->PRE_camToWorld;
