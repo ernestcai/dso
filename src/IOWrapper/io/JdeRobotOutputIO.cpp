@@ -60,19 +60,19 @@ namespace dso {
         }
 
         void JdeRobotOutputIO::reset() {
-
+            throw std::runtime_error("Not implemented yet");
         }
 
         void JdeRobotOutputIO::join() {
             pcl::PointCloud<pcl::PointXYZ> cloud;
-            int num = 0;
             for (auto ph : keyframes){
+                // apply threshold
+                ph->refreshPC(true, 0.001, 0.001, 1, 0.1, 1);
+
                 cloud = cloud + ph->getPC();
-                // std::cerr << "number of points in frame "<< ph->id<<" : " << ph->getPC().points.size() << std::endl;
-                num += ph->getPC().points.size();
             }
 
-            std::cerr << "number of points (sum): "<< num << std::endl;
+            std::cerr << "number of keyframes : "<< keyframes.size() << std::endl;
             std::cerr << "number of points : "<< cloud.points.size() << std::endl;
 
 

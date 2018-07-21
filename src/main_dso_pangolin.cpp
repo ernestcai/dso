@@ -570,7 +570,7 @@ int main( int argc, char** argv )
         viewer->run();
 
     runthread.join();
-    std::cerr << "----------------------Join Completed-----------------" << std::endl;
+    std::cerr << "----------------------Viewer Completed-----------------" << std::endl;
 
 	for(IOWrap::Output3DWrapper* ow : fullSystem->outputWrapper)
 	{
