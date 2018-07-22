@@ -22,7 +22,7 @@ namespace dso {
 
         class JdeRobotOutputIO : public Output3DWrapper{
         public:
-            JdeRobotOutputIO(std::string filename = "cloud.xyz");
+            JdeRobotOutputIO(std::string filename = "result.yaml");
 
             // ==================== Output3DWrapper Functionality ======================
             virtual void publishGraph(const std::map<uint64_t, Eigen::Vector2i, std::less<uint64_t>, Eigen::aligned_allocator<std::pair<const uint64_t, Eigen::Vector2i>>> &connectivity) override;

@@ -161,9 +161,7 @@ namespace dso
 
             pangolin::Var<double> settings_trackFps("ui.Track fps",0,0,0,false);
             pangolin::Var<double> settings_mapFps("ui.KF fps",0,0,0,false);
-
-            pangolin::Var<bool> settings_saveMap("ui.Save Map",false,true);
-
+            
 
             // Default hooks for exiting (Esc) and fullscreen (tab).
             while( !pangolin::ShouldQuit() && running )
@@ -288,29 +286,7 @@ namespace dso
 
 
                 if(needReset) reset_internal();
-
-                // save all pointclouds
-//        if(settings_saveMap){
-//			pcl::PointCloud<pcl::PointXYZ> cloud;
-//			for (auto ph : keyframes){
-//				cloud = cloud + ph->getPC();
-//			}
-//
-//            pcl::io::savePCDFileASCII("cloud.pcd",cloud);
-//            std::cout << "saving pointcloud to cloud.pcd." << std::endl;
-//            settings_saveMap = false;
-//        }
             }
-
-//            pcl::PointCloud<pcl::PointXYZ> cloud;
-//            for (auto ph : keyframes){
-//                cloud = cloud + ph->getPC();
-//            }
-//
-//            pcl::io::savePCDFileASCII("cloud.pcd",cloud);
-//            std::cout << "saving pointcloud to cloud.pcd." << std::endl;
-//            settings_saveMap = false;
-
 
             printf("QUIT Pangolin thread!\n");
             // do not kill the whole process here

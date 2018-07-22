@@ -538,7 +538,7 @@ int main( int argc, char** argv )
         gettimeofday(&tv_end, NULL);
 
 
-        fullSystem->printResult("result.yaml");
+        // fullSystem->printResult("result.yaml");
 
 
         int numFramesProcessed = abs(idsToPlay[0]-idsToPlay.back());

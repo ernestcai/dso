@@ -70,10 +70,9 @@ namespace dso {
                 ph->refreshPC(true, 0.001, 0.001, 1, 0.1, 1);
             }
 
-            std::string file = "output.yaml";
-            std::ofstream myfile(file.c_str());
+            std::ofstream myfile(target_filename.c_str());
             if (!myfile){
-                std::cerr << "[ERROR] Failed to open file: " <<  file << std::endl;
+                std::cerr << "[ERROR] Failed to open file: " <<  target_filename << std::endl;
                 throw std::runtime_error("");
             }
 
@@ -129,6 +128,10 @@ namespace dso {
             for (KeyFrameDisplay * kf : keyframes){
                 counter += kf->printPoints(counter,myfile);
             }
+
+            std::cout << "[INFO] Trajectory saved to file: " << target_filename << std::endl;
+            std::cout << "Number of points: " << counter << std::endl;
+            std::cout << "Numebr of keyframes: " << keyframes.size() << std::endl;
 
             myfile.close();
         }
