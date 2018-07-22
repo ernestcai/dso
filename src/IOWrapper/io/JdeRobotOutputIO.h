@@ -39,6 +39,7 @@ namespace dso {
             virtual void reset() override;
 
         private:
+
             std::string target_filename;
 
             // 3D model rendering
@@ -46,6 +47,9 @@ namespace dso {
             std::vector<KeyFrameDisplay*> keyframes;
             std::vector<Vec3f,Eigen::aligned_allocator<Vec3f>> allFramePoses;
             std::map<int, KeyFrameDisplay*> keyframesByKFID;
+
+            // camera
+            CalibHessian Hcalib_;
         };
 
     }

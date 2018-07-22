@@ -28,6 +28,7 @@ namespace dso {
         void JdeRobotOutputIO::publishKeyframes(std::vector<dso::FrameHessian *> &frames, bool final,
                                                 dso::CalibHessian *HCalib) {
 
+            Hcalib_ = *HCalib;
 
             boost::unique_lock<boost::mutex> lk(model3DMutex);
             for(FrameHessian* fh : frames)
@@ -64,20 +65,74 @@ namespace dso {
         }
 
         void JdeRobotOutputIO::join() {
-            pcl::PointCloud<pcl::PointXYZ> cloud;
             for (auto ph : keyframes){
                 // apply threshold
                 ph->refreshPC(true, 0.001, 0.001, 1, 0.1, 1);
-
-                cloud = cloud + ph->getPC();
             }
 
-            std::cerr << "number of keyframes : "<< keyframes.size() << std::endl;
-            std::cerr << "number of points : "<< cloud.points.size() << std::endl;
+            std::string file = "output.yaml";
+            std::ofstream myfile(file.c_str());
+            if (!myfile){
+                std::cerr << "[ERROR] Failed to open file: " <<  file << std::endl;
+                throw std::runtime_error("");
+            }
+
+            // YAML 1.0
+            std::string output = "%YAML:1.0\n";
+            // Save camera parameters
+            output += "camera:\n";
+            output += "  fx: " + std::to_string(Hcalib_.fxl()) + "\n";
+            output += "  fy: " + std::to_string(Hcalib_.fyl()) + "\n";
+            output += "  cx: " + std::to_string(Hcalib_.cxl()) + "\n";
+            output += "  cy: " + std::to_string(Hcalib_.cyl()) + "\n";
+            // because Monocular Dataset is using vignette, set distortion to 0
+            output += "  k1: " + std::to_string(0.0) + "\n";
+            output += "  k2: " + std::to_string(0.0) + "\n";
+            output += "  p1: " + std::to_string(0.0) + "\n";
+            output += "  p2: " + std::to_string(0.0) + "\n";
+            output += "  k3: " + std::to_string(0.0) + "\n";
+            myfile << output;
+
+            // save keyframe poses
+            myfile << "keyframes:\n";
+            for (auto kf : keyframes){
+                // get rotation and translation, convert Sophus::SE3 to Eigen::Matrix4d
+                auto cam_r = kf->camToWorld.rotationMatrix();
+                auto cam_t = kf->camToWorld.translation();
+                Eigen::Matrix3d rotation_mat(3,3);
+                for (int i = 0; i < 3; i++){
+                    for (int j = 0; j < 3; j++){
+                        rotation_mat(i,j) = cam_r(i,j);
+                    }
+                }
+
+                Eigen::Quaterniond q(rotation_mat);
+                Eigen::Vector3d t(cam_t);
+
+                output = "";
+                output += "  - id: " + std::to_string(kf->id) + "\n";
+                output += "    filename: \"" + kf->filename + "\"\n";
+                output += "    pose:\n";
+                output += "      - " + std::to_string(q.w()) + "\n";
+                output += "      - " + std::to_string(q.x()) + "\n";
+                output += "      - " + std::to_string(q.y()) + "\n";
+                output += "      - " + std::to_string(q.z()) + "\n";
+                output += "      - " + std::to_string(t(0)) + "\n";
+                output += "      - " + std::to_string(t(1)) + "\n";
+                output += "      - " + std::to_string(t(2)) + "\n";
+                myfile << output;
+            }
 
 
-            pcl::io::savePCDFileASCII(target_filename,cloud);
-            std::cout << "saving pointcloud to " << target_filename << "." << std::endl;
+            myfile << "points:\n";
+            int counter = 0;
+            for (KeyFrameDisplay * kf : keyframes){
+                counter += kf->printPoints(counter,myfile);
+            }
+
+            myfile.close();
         }
+
+
     }
 }

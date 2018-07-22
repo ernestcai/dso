@@ -354,6 +354,11 @@ void parseArgument(char* arg)
 
 int main( int argc, char** argv )
 {
+//	for(int idx=0;idx<patternNum;idx++){
+//		std::cerr << "patternP[" << idx << "][0]: " << patternP[idx][0] << std::endl;
+//        std::cerr << "patternP[" << idx << "][1]: " << patternP[idx][1] << std::endl;
+//	}
+
 	//setlocale(LC_ALL, "");
 	for(int i=1; i<argc;i++)
 		parseArgument(argv[i]);

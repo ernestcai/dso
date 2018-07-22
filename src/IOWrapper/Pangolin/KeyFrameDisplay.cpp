@@ -44,6 +44,16 @@ namespace IOWrap
 {
 
 
+//    template <int ppp>
+//	InputPointSparse<ppp>::InputPointSparse() {
+//		// observations = new std::vector<Observation>();
+//	}
+//
+//	template <int ppp>
+//	InputPointSparse<ppp>::~InputPointSparse() {
+//		// delete observations;
+//	}
+
 KeyFrameDisplay::KeyFrameDisplay()
 {
 	originalInputSparse = 0;
@@ -79,6 +89,7 @@ void KeyFrameDisplay::setFromF(FrameShell* frame, CalibHessian* HCalib)
 	cxi = -cx / fx;
 	cyi = -cy / fy;
 	camToWorld = frame->camToWorld;
+    filename = frame->filename;
 	needRefresh=true;
 }
 
@@ -98,9 +109,18 @@ void KeyFrameDisplay::setFromKF(FrameHessian* fh, CalibHessian* HCalib)
 
 	if(numSparseBufferSize < npoints)
 	{
-		if(originalInputSparse != 0) delete originalInputSparse;
+		if(originalInputSparse != 0) {
+            for (int i = 0; i < numSparseBufferSize; i++){
+                delete originalInputSparse[i].observations;
+            }
+            delete[] originalInputSparse;
+        }
+
 		numSparseBufferSize = npoints+100;
         originalInputSparse = new InputPointSparse<MAX_RES_PER_POINT>[numSparseBufferSize];
+        for (int i = 0; i < numSparseBufferSize; i++){
+            originalInputSparse[i].observations = new std::vector<Observation>;
+        }
 	}
 
     InputPointSparse<MAX_RES_PER_POINT>* pc = originalInputSparse;
@@ -146,6 +166,32 @@ void KeyFrameDisplay::setFromKF(FrameHessian* fh, CalibHessian* HCalib)
 		pc[numSparsePoints].idepth_hessian = p->idepth_hessian;
 		pc[numSparsePoints].numGoodRes =  0;
 		pc[numSparsePoints].status=2;
+
+        // save observation on the host frame
+        addObservation(
+                &pc[numSparsePoints],
+                Observation(p->host->shell->id,  Eigen::Vector2f(p->u,p->v))
+        );
+//        pc[numSparsePoints].observations->push_back(
+//                Observation(p->host->shell->id,  Eigen::Vector2f(p->u,p->v))
+//        );
+
+        // save observation on all target frames
+        for (auto ob : p->residuals){
+            // make sure all host of residual are of the point host
+            assert(p->host->shell->id == ob->host->shell->id);
+			if (ob->target_frame_id != 0){
+                addObservation(
+                        &pc[numSparsePoints],
+                        Observation(ob->target_frame_id, ob->projectedTo[4])
+                );
+                // std::cerr << "observation target_frame_id: " <<  ob->target_frame_id << std::endl;
+//                pc[numSparsePoints].observations->push_back(
+//                        Observation(ob->target_frame_id, ob->projectedTo[4])      // use the center point
+//                );
+            }
+        }
+
 		numSparsePoints++;
 	}
 
@@ -199,8 +245,8 @@ pcl::PointCloud<pcl::PointXYZ> KeyFrameDisplay::getPC() {
 
 
         //for(int pnt=0;pnt<patternNum;pnt++)
-        // only need one point here
-        for(int pnt=0;pnt<1;pnt++)
+        // only need one point here, set pnt=4, the central point
+        for(int pnt=4;pnt<5;pnt++)
         {
             if(my_sparsifyFactor > 1 && rand()%my_sparsifyFactor != 0) continue;
             int dx = patternP[pnt][0];
@@ -466,6 +512,85 @@ void KeyFrameDisplay::drawPC(float pointSize)
 
 	glPopMatrix();
 }
+
+
+        int KeyFrameDisplay::printPoints(int starting_index, std::ofstream &myfile) {
+            auto cam_r = camToWorld.rotationMatrix();
+            auto cam_t = camToWorld.translation();
+            Eigen::Matrix3d rotation_mat(3,3);
+            for (int i = 0; i < 3; i++){
+                for (int j = 0; j < 3; j++){
+                    rotation_mat(i,j) = cam_r(i,j);
+                }
+            }
+
+            Eigen::Quaterniond q_cam(rotation_mat);
+            Eigen::Vector3d t_cam(cam_t);
+
+            // print points
+            int point_idx = 0;
+            for(int i=0;i<numSparsePoints;i++)
+            {
+                if(originalInputSparse[i].idpeth < 0) continue;
+
+
+                float depth = 1.0f / originalInputSparse[i].idpeth;
+                float depth4 = depth*depth; depth4*= depth4;
+                float var = (1.0f / (originalInputSparse[i].idepth_hessian+0.01));
+
+                if(var * depth4 > my_scaledTH)
+                    continue;
+
+                if(var > my_absTH)
+                    continue;
+
+                if(originalInputSparse[i].relObsBaseline < my_minRelBS)
+                    continue;
+
+
+                //for(int pnt=0;pnt<patternNum;pnt++)
+                // only need one point here, set pnt=4, the central point
+                int dx = patternP[4][0];
+                int dy = patternP[4][1];
+
+                Eigen::Vector3d pos;
+                pos(0) = ((originalInputSparse[i].u+dx)*fxi + cxi) * depth;
+                pos(1) = ((originalInputSparse[i].v+dy)*fyi + cyi) * depth;
+                pos(2) = depth*(1 + 2*fxi * (rand()/(float)RAND_MAX-0.5f));
+
+                Eigen::Vector3d pos_new = cam_r * pos + cam_t;
+
+                std::string output = "";
+                output += "  - id: " + std::to_string(point_idx + starting_index) + "\n";
+                output += "    pose:\n";
+                output += "      - " + std::to_string(pos_new(0)) + "\n";
+                output += "      - " + std::to_string(pos_new(1)) + "\n";
+                output += "      - " + std::to_string(pos_new(2)) + "\n";
+                output += "    observations:\n";
+                for (Observation ob : (*originalInputSparse[i].observations)){
+                    output += "      - kf: " + std::to_string(ob.frame_id) + "\n";
+                    output += "        pixel:\n";
+                    output += "          - "+ std::to_string(ob.projection(0)) + "\n";
+                    output += "          - "+ std::to_string(ob.projection(1)) + "\n";
+                }
+
+                myfile << output;
+                point_idx ++;
+            }
+
+            return point_idx;
+
+        }
+
+        void KeyFrameDisplay::addObservation(struct InputPointSparse<MAX_RES_PER_POINT> *pt, const Observation &ob) {
+            for (int i = 0; i < (pt->observations->size()); i++){
+                if (ob.frame_id == (pt->observations->at(i).frame_id)){
+                    pt->observations->at(i) = ob;
+                    return;
+                }
+            }
+            pt->observations->push_back(ob);
+        }
 
 }
 }
